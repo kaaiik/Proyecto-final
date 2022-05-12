@@ -52,3 +52,4 @@ def train_and_predict_till2050(df):
     
 
 
+
