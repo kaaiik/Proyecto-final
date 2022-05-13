@@ -1,4 +1,5 @@
 import warnings
+warnings.filterwarnings('ignore')
 
 import pandas as pd
 import numpy as np
@@ -6,6 +7,12 @@ import numpy as np
 import requests
 from bs4 import BeautifulSoup as bs
 
+from mpl_toolkits.basemap import Basemap
+from matplotlib.patches import Polygon
+from matplotlib.collections import PatchCollection
+
+from geopy import geocoders
+from geopy.geocoders import Nominatim
 #--------------------------------------------
 
 def get_df(url):
@@ -67,3 +74,21 @@ def get_df2(url):
     
     df = pd.DataFrame(data, columns=cols)
     return df
+    
+#---------------------- Funcion para sacar la (lat, long) de una ciudad
+
+def get_location(city):
+    url = f'https://nominatim.openstreetmap.org/search?city={city}&format=json&accept-language=en&zoom=3'
+    try:
+        result = requests.get(url=url).json()
+        return (result[0]['lat'], result[0]['lon'])
+    except:
+        return None
+        
+#---------------------- Para convertir a coordenadas de ubicacion una tupla de strings
+
+def ubicator(tupla):
+    lst = list(tupla)
+    return (float(lst[0]), float(lst[1]))
+
+
