@@ -13,6 +13,9 @@ from matplotlib.collections import PatchCollection
 
 from geopy import geocoders
 from geopy.geocoders import Nominatim
+from geopy.location import Location
+
+import matplotlib.pyplot as plt
 #--------------------------------------------
 
 def get_df(url):
@@ -91,4 +94,10 @@ def ubicator(tupla):
     lst = list(tupla)
     return (float(lst[0]), float(lst[1]))
 
+#--------------------- Para transformar los datos de Location a (float, float)
 
+def floater(tupla):
+    return float(tupla[0]), float(tupla[1])
+
+def tupler(string):
+    return string.split(',')[0], string.split(',')[1].replace(' ', '')
