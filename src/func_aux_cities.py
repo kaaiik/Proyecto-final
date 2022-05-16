@@ -15,6 +15,7 @@ from geopy import geocoders
 from geopy.geocoders import Nominatim
 from geopy.location import Location
 
+
 import matplotlib.pyplot as plt
 #--------------------------------------------
 
