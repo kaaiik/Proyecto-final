@@ -7,7 +7,7 @@ import numpy as np
 import requests
 from bs4 import BeautifulSoup as bs
 
-from mpl_toolkits.basemap import Basemap
+from mpl_toolkits.basemap import Basemap, shiftgrid
 from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection
 
@@ -15,90 +15,54 @@ from geopy import geocoders
 from geopy.geocoders import Nominatim
 from geopy.location import Location
 
+import xarray as xr
+import cftime
+from mpl_toolkits.basemap import Basemap
+from netCDF4 import Dataset
+import hvplot.xarray
 
 import matplotlib.pyplot as plt
-#--------------------------------------------
+from matplotlib import colors as c
+#-------------------------------------------- Maquillamos el dataaset que me he descargado de la esa
 
-def get_df(url):
-    html = requests.get(url).content
-    
-    soup = bs(html, 'html.parser')
-    
-    tabla = soup.find_all('table')[0]
-    
-    filas = tabla.find_all('tr')
-    
-    columnas = filas[0].find_all('th')
-    cols = [i.text.split('\n')[0] for i in columnas]
-    
-    filas_def = []
 
-    for i in range(1, len(filas)):
-        fila_i = filas[i].find_all('td')
-        filas_def.append(fila_i)
+'''map_df=xr.open_dataset('../data/sea_level_phase.nc')
 
-    data = []
+ds = map_df.rename(time='time_step')
+print(ds.time_step)
 
-    for i in range(len(filas_def)):
-        aux = []
-        for j in range(len(filas_def[i])):
-            elem = filas_def[i][j].text
-            aux.append(elem)
-        data.append(aux)
-        
-    for i in range(len(data)):
-        data[i][2] = data[i][2][:-1]
-    
-    df = pd.DataFrame(data, columns=cols)
-    return df
-    
-#-----------------------Otra funcion para una tabla que no me funcionaba (hace lo mismo que la anterior
+# Time encoding properties
+dtype = ds.time_step.encoding['dtype']
+units = ds.time_step.encoding['units']
 
-def get_df2(url):
-    html = requests.get(url).content
-    
-    soup = bs(html, 'html.parser')
-    
-    tabla = soup.find_all('table')[1]
-    
-    columnas = tabla.find('tr')
-    cols = [i.text for i in columnas.find_all('th')]
-    
-    filas = tabla.find_all('tr')[1:]
-    rows = [i.text for i in filas]
+# Get the time boundary values
+ts       = ds.time_step.values
+ts_start = ts[0]
+ts_end   = ts[-1]
+ts_mid   = ts_start + 0.5 * (ts_end - ts_start)
 
-    data = []
+# New coordinate variables according to CF
+time      = xr.DataArray(np.array([ts_mid]), dims='time')
+time_bnds = xr.DataArray(np.array([[ts_start, ts_end]]), dims=['time', 'bnds'])
 
-    for i in range(len(rows)):
-        fila = rows[i].split('\n')
-        for i in fila:
-            if i == '':
-                fila.remove(i)
-        data.append(fila)
-    
-    df = pd.DataFrame(data, columns=cols)
-    return df
-    
-#---------------------- Funcion para sacar la (lat, long) de una ciudad
+# Assign coordinate variables
+ds = ds.assign_coords(time=time, time_bnds=time_bnds)
 
-def get_location(city):
-    url = f'https://nominatim.openstreetmap.org/search?city={city}&format=json&accept-language=en&zoom=3'
-    try:
-        result = requests.get(url=url).json()
-        return (result[0]['lat'], result[0]['lon'])
-    except:
-        return None
-        
-#---------------------- Para convertir a coordenadas de ubicacion una tupla de strings
+# Update coordinate variable attributes according to CF
+ds.time.attrs.update(bounds='time_bnds')
 
-def ubicator(tupla):
-    lst = list(tupla)
-    return (float(lst[0]), float(lst[1]))
+# Set coordinate variable encodings
+ds.time.encoding.update(units=units, dtype=dtype)
+ds.time_bnds.encoding.update(units=units, dtype=dtype)
 
-#--------------------- Para transformar los datos de Location a (float, float)
+ds['ampl'] = ds.ampl.expand_dims('time')
+ds['phase'] = ds.phase.expand_dims('time')
 
-def floater(tupla):
-    return float(tupla[0]), float(tupla[1])
+ds = ds.transpose('time', 'bnds', 'time_step', 'period', 'lat', 'lon')
 
-def tupler(string):
-    return string.split(',')[0], string.split(',')[1].replace(' ', '')
+ds.to_netcdf('../data/sea_level_phase(act).nc')'''
+
+#-------------------------------------------- Ahora sí, las funciones que vamos a utilizar
+
+
+
